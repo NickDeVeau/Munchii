@@ -1,0 +1,10 @@
+﻿<Application xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Munchii.App"
+             xmlns:local="clr-namespace:Munchii">
+    <Application.Resources>
+        <ResourceDictionary>
+            <local:BoolToStrikethroughConverter x:Key="BoolToStrikethroughConverter" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

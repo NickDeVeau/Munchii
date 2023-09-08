@@ -1,0 +1,112 @@
+﻿<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Munchii.HostPage"
+             BackgroundColor="White">
+
+    <Grid VerticalOptions="FillAndExpand">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ImageButton Source="Arrow.png"
+                     Clicked="OnLeaveRoomClicked"
+                     HorizontalOptions="Start"
+                     VerticalOptions="Start"
+                     BackgroundColor="Transparent"
+                     Grid.Row="0"
+                     Padding="35,80" />
+
+        <Grid Grid.Row="1" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+             <!-- Room Code Layout -->
+        <StackLayout x:Name="RoomCodeLayout" Orientation="Horizontal" 
+             HorizontalOptions="CenterAndExpand"
+             VerticalOptions="CenterAndExpand"> <!-- Added this line to center vertically -->
+
+    <Frame CornerRadius="10" 
+           BackgroundColor="#F0F4FB" 
+           WidthRequest="20"
+           HeightRequest="30"
+           Margin="7"
+           HasShadow="False">
+        <Label x:Name="Digit1" FontSize="35" FontAttributes="None" FontFamily="DM Sans" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" TextColor="Black"/>
+    </Frame>
+        <Frame CornerRadius="10" 
+               BackgroundColor="#F0F4FB" 
+               WidthRequest="20"
+               HeightRequest="30"
+                Margin="7"
+               HasShadow="False">
+            <Label x:Name="Digit2" FontSize="35" FontAttributes="None" FontFamily="DM Sans" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" TextColor="Black"/>
+        </Frame>
+        <Frame CornerRadius="10" 
+               BackgroundColor="#F0F4FB" 
+               WidthRequest="20"
+               HeightRequest="30"
+                Margin="7"
+               HasShadow="False">
+            <Label x:Name="Digit3" FontSize="35" FontAttributes="None" FontFamily="DM Sans" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" TextColor="Black"/>
+        </Frame>
+        <Frame CornerRadius="10" 
+               BackgroundColor="#F0F4FB" 
+               WidthRequest="20"
+               HeightRequest="30"
+               Margin="7"
+               HasShadow="False">
+            <Label x:Name="Digit4" FontSize="35" FontAttributes="None" FontFamily="DM Sans" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" TextColor="Black"/>
+        </Frame>
+    </StackLayout>
+
+            <Label x:Name="RoomCodeLabel"
+                   Grid.Row="1"
+                   TextColor="#D23535" 
+                   Text="" 
+                   FontSize="Large"
+                   HorizontalOptions="CenterAndExpand"
+                   IsVisible="False"/>
+
+            <Button Text="Copy to Clipboard" 
+                    Grid.Row="2"
+                    BackgroundColor="White"
+                    TextColor="#D23535"
+                    BorderColor="#D23535"
+                    BorderWidth="1.5"
+                    FontFamily="DM Sans"
+                    FontAttributes="Bold"
+                    Padding="10, 5"
+                    Clicked="OnCopyToClipboardClicked"
+                    Margin="20" 
+                    HorizontalOptions="Center" />
+
+            <Label x:Name="UserCountLabel"
+                   Grid.Row="3"
+                   TextColor="#D23535"
+                   FontFamily="DM Sans"
+                   FontSize="Large"
+                   HorizontalOptions="CenterAndExpand" />
+        </Grid>
+
+        <!-- Continue Button -->
+        <Button x:Name="StartQuizButton"
+                Grid.Row="2"
+                Text="Continue"
+                Clicked="OnStartQuizClicked"
+                BackgroundColor="Black"
+                TextColor="White"
+                CornerRadius="15"
+                WidthRequest="359"
+                HeightRequest="70"
+                HorizontalOptions="Center"
+                Margin="20"
+                FontFamily="DM Sans"
+                FontSize="20"/>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,29 @@
+﻿<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Munchii.Controllers"
+             x:Class="Munchii.RankRestaurantsPage"
+             BackgroundColor="White">
+    <ListView x:Name="RestaurantsList" SeparatorVisibility="None" RowHeight="140" BackgroundColor="White">
+        <ListView.Header>
+            <StackLayout Spacing="10" Padding="0,100,0,0" > <!-- Moved padding here -->
+                <Label Text="Scale" FontSize="Large" FontAttributes="Bold" HorizontalOptions="CenterAndExpand" TextColor="Black"/>
+                <Label Text="Use the scales to rank each restaurant" HorizontalOptions="CenterAndExpand" TextColor="Black"/>
+            </StackLayout>
+        </ListView.Header>
+        <ListView.ItemTemplate>
+            <DataTemplate>
+                <ViewCell>
+                    <Frame Padding="5" CornerRadius="25" HasShadow="True" Margin="10,5" BackgroundColor="White">
+                        <StackLayout Orientation="Vertical" VerticalOptions="CenterAndExpand">
+                            <Label Text="{Binding Name}" HorizontalOptions="CenterAndExpand" FontFamily="DM Sans" TextColor="Black"/>
+                            <local:CustomSlider x:Name="RankingSlider" Minimum="0" Maximum="5" Value="{Binding Rating}"/>
+                        </StackLayout>
+                    </Frame>
+                </ViewCell>
+            </DataTemplate>
+        </ListView.ItemTemplate>
+        <ListView.Footer>
+            <Button Text="Submit" Clicked="OnSubmitClicked"/> <!-- Moved the button to the footer -->
+        </ListView.Footer>
+    </ListView>
+</ContentPage>

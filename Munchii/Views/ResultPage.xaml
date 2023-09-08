@@ -1,0 +1,76 @@
+﻿<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maps="clr-namespace:Xamarin.Forms.Maps;assembly=Xamarin.Forms.Maps" 
+             x:Class="Munchii.ResultPage"
+             BackgroundColor="White">
+    <ContentPage.Content>
+        <StackLayout>
+            
+            <ListView x:Name="RestaurantList" SeparatorVisibility="None" RowHeight="140" BackgroundColor="White">
+    <ListView.Header>
+        <StackLayout Spacing="10" Padding="0,100,0,0" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand">
+                        <Label Text="Considering the data, your party’s top food choice is Mexican food." 
+           FontSize="Large" 
+           FontAttributes="Bold" 
+           HorizontalOptions="CenterAndExpand" 
+           VerticalOptions="CenterAndExpand" 
+           HorizontalTextAlignment="Center"
+           VerticalTextAlignment="Center"
+           TextColor="Black"
+           FontFamily="DM Sans"/>
+    <Frame Padding="0" BorderColor="#D23535" CornerRadius="20" HasShadow="False" HorizontalOptions="CenterAndExpand">
+        <Button x:Name="RadiusButton" 
+                Text="Matches within 5 miles"
+                Padding="0,5,25,0"
+                BackgroundColor="White"
+                TextColor="#D23535"
+                Clicked="OnRadiusButtonClicked" />
+    </Frame>
+    
+
+</StackLayout>
+
+    </ListView.Header>
+    <ListView.ItemTemplate>
+    <DataTemplate>
+        <ViewCell>
+            <Frame Padding="5" CornerRadius="25" HasShadow="True" Margin="10,5" BackgroundColor="White">
+                <StackLayout Orientation="Horizontal" VerticalOptions="CenterAndExpand">
+
+                    <Frame BorderColor="Red" Padding="7" BackgroundColor="Transparent" CornerRadius="12">
+                        <Label Text="{Binding PriceSign}" 
+                               HorizontalOptions="CenterAndExpand" 
+                               FontSize="Medium" 
+                               TextColor="#D23535"
+                               FontFamily="DM Sans"/>
+                    </Frame>
+
+                    <StackLayout Orientation="Vertical" VerticalOptions="CenterAndExpand" Margin="10,0,0,0">
+                        <Label Text="{Binding Name}" 
+                               HorizontalOptions="CenterAndExpand" 
+                               TextColor="Black" 
+                               FontAttributes="Bold" 
+                               FontSize="Medium"
+                               FontFamily="DM Sans"/>
+                        <Label Text="{Binding Address}" 
+                               HorizontalOptions="CenterAndExpand" 
+                               TextColor="Gray" 
+                               FontSize="Small"
+                               FontFamily="DM Sans"/>
+                    </StackLayout>
+
+                </StackLayout>
+            </Frame>
+        </ViewCell>
+    </DataTemplate>
+</ListView.ItemTemplate>
+</ListView>
+
+            <Button Text="Home" 
+                    TextColor="Black" 
+                    Clicked="OnHomeClicked" 
+                    VerticalOptions="CenterAndExpand" 
+                    HorizontalOptions="CenterAndExpand"/>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
