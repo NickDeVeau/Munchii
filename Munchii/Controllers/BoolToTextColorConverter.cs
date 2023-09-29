@@ -4,15 +4,15 @@ using Xamarin.Forms;
 
 namespace Munchii
 {
-    public class BoolToColorConverter : IValueConverter
+    public class BoolToTextColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is bool && (bool)value)
             {
-                return Color.FromHex("#D23535"); // Selected (background color)
+                return Color.White; // Selected (text color)
             }
-            return Color.White; // Default (background color)
+            return Color.Black; // Default (text color)
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

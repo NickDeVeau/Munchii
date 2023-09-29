@@ -76,6 +76,8 @@
     <Compile Include="Renderers\CustomSliderRenderer.cs" />
     <Compile Include="Renderers\UIColorExtensions.cs" />
     <Compile Include="Renderers\CustomFrameRenderer.cs" />
+    <Compile Include="Renderers\CustomShadowFrameRenderer.cs" />
+    <Compile Include="Renderers\CustomSearchBarRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="Resources\LaunchScreen.storyboard" />
@@ -138,13 +140,13 @@
   <ItemGroup>
     <BundleResource Include="Resources\LogoFull.png" />
     <BundleResource Include="Resources\DMSans.ttf" />
-    <BundleResource Include="Resources\Arrow.png" />
     <BundleResource Include="Entitlements.plist">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </BundleResource>
     <BundleResource Include="GoogleService-Info.plist">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </BundleResource>
+    <BundleResource Include="Resources\Arrow.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Renderers\" />

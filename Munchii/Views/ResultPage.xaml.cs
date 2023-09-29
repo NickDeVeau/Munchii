@@ -12,17 +12,48 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Net.Http;
 using Xamarin.Essentials;
+using System.ComponentModel;
 
 namespace Munchii
 {
-    public partial class ResultPage : ContentPage
+    public partial class ResultPage : ContentPage, INotifyPropertyChanged
     {
+
         private readonly string roomCode;
         private readonly FirebaseClient firebase;
+        int miles = 1;
+
+
+        private string _winningRestaurantType;
+        public string WinningRestaurantType
+        {
+            get { return _winningRestaurantType; }
+            set
+            {
+                if (_winningRestaurantType != value)
+                {
+
+                    _winningRestaurantType = value;
+                    OnPropertyChanged(nameof(WinningRestaurantType));
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            var changed = PropertyChanged;
+            if (changed != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
 
         public ResultPage(string roomCode)
         {
             InitializeComponent();
+            BindingContext = this;
             NavigationPage.SetHasNavigationBar(this, false);
             this.roomCode = roomCode;
 
@@ -31,9 +62,39 @@ namespace Munchii
             LoadResults();
         }
 
-        private async Task<List<Place>> FetchTopThreeRestaurants(string restaurantType)
+        private List<Place> FetchTopThreeFromList(List<Place> allRestaurants)
         {
-            var allRestaurants = await FetchNearbyRestaurants(restaurantType);
+            if (allRestaurants == null || allRestaurants.Count == 0)
+                return new List<Place>();
+
+            var topThree = new List<Place>();
+            var cheapRestaurant = allRestaurants.FirstOrDefault(r => r.PriceLevel == 1);
+            var mediumRestaurant = allRestaurants.FirstOrDefault(r => r.PriceLevel == 2);
+            var expensiveRestaurant = allRestaurants.FirstOrDefault(r => r.PriceLevel == 3);
+
+            if (cheapRestaurant != null)
+            {
+                cheapRestaurant.IsTopThree = true;
+                topThree.Add(cheapRestaurant);
+            }
+            if (mediumRestaurant != null)
+            {
+                mediumRestaurant.IsTopThree = true;
+                topThree.Add(mediumRestaurant);
+            }
+            if (expensiveRestaurant != null)
+            {
+                expensiveRestaurant.IsTopThree = true;
+                topThree.Add(expensiveRestaurant);
+            }
+
+            return topThree;
+        }
+
+
+        private async Task<List<Place>> FetchTopThreeRestaurants(string restaurantType, string radius)
+        {
+            var allRestaurants = await FetchNearbyRestaurants(restaurantType, radius);
             if (allRestaurants == null || allRestaurants.Count == 0)
                 return new List<Place>();
 
@@ -52,7 +113,7 @@ namespace Munchii
             return topThree;
         }
 
-        private async Task<List<Place>> FetchNearbyRestaurants(string restaurantType)
+        private async Task<List<Place>> FetchNearbyRestaurants(string restaurantType, string radius)
         {
             string apiKey = "AIzaSyC7PV_5w9rS6LX3wNetqR-CSrmxrR1zxg8";
 
@@ -60,11 +121,10 @@ namespace Munchii
             if (locationObj == null)
             {
                 Console.WriteLine("Couldn't fetch the current location.");
-                return new List<Place>();  // Return an empty list or handle this scenario appropriately
+                return new List<Place>();
             }
 
             string location = $"{locationObj.Latitude},{locationObj.Longitude}";
-            string radius = "2000"; // 2 km for example
             string type = "restaurant";
             string keyword = restaurantType;
 
@@ -78,9 +138,9 @@ namespace Munchii
             }
         }
 
-
         private async void LoadResults()
         {
+            BindingContext = this;
             var usersSnapshot = await firebase
                 .Child("rooms")
                 .Child(roomCode)
@@ -107,7 +167,6 @@ namespace Munchii
                 }
             }
 
-
             foreach (var userSnapshot in usersSnapshot)
             {
                 var rankings = userSnapshot.Object.QuizData?.Rankings;
@@ -129,37 +188,36 @@ namespace Munchii
                     }
                 }
             }
-
             var winningRestaurant = restaurantRankings.OrderByDescending(r => r.Value).FirstOrDefault();
 
             if (winningRestaurant.Key != null)
             {
-               
+                WinningRestaurantType = winningRestaurant.Key;  // Update the property
 
-                var nearbyRestaurants = await FetchTopThreeRestaurants(winningRestaurant.Key);
+                float milesToMeters = miles * 1609;
+                string radius = milesToMeters.ToString();
 
-                foreach (var restaurant in nearbyRestaurants)
+                var allNearbyRestaurants = await FetchNearbyRestaurants(winningRestaurant.Key, radius);
+                var topThree = FetchTopThreeFromList(allNearbyRestaurants);  // Extracting top three
+
+                foreach (var restaurant in allNearbyRestaurants)
                 {
                     restaurant.Name = restaurant.Name.ToUpper();
                 }
 
-                // Updated line: Removing unnecessary 'Take(3)'
-                RestaurantList.ItemsSource = nearbyRestaurants;
+                RestaurantList.ItemsSource = topThree.Concat(allNearbyRestaurants.Except(topThree));  // Display top three followed by the rest
             }
-           
-        
         }
-
-        int miles = 5;
 
         private void OnRadiusButtonClicked(object sender, EventArgs e)
         {
-            miles += 5;
-            if (miles > 15)
+            miles = miles*2;
+            if (miles > 25)
             {
-                miles = 5;
+                miles = 1;
             }
             RadiusButton.Text = $"Matches within {miles} miles";
+            LoadResults();
         }
 
         public async Task<Location> GetCurrentLocationAsync()
@@ -185,8 +243,6 @@ namespace Munchii
             }
         }
 
-
-
         private void AddPinToMap(string label, string address, Position position)
         {
             var pin = new Pin
@@ -197,6 +253,37 @@ namespace Munchii
                 Address = address
             };
         }
+
+        private async void OnDescriptionTapped(object sender, EventArgs e)
+        {
+            if (sender is Label label && label.BindingContext is Place place)
+            {
+                // Define the destination
+                var destination = place.Address;
+
+                // Check which platform we're on
+                var isiOS = Device.RuntimePlatform == Device.iOS;
+
+                // iOS doesn't like spaces in its URLs
+                destination = isiOS ? Uri.EscapeUriString(destination) : destination;
+
+                string url;
+
+                if (isiOS)
+                {
+                    // Open in Apple Maps
+                    url = $"http://maps.apple.com/maps?q={destination}";
+                }
+                else
+                {
+                    // Open in Google Maps
+                    url = $"https://www.google.com/maps/dir/?api=1&destination={destination}";
+                }
+
+                await Launcher.OpenAsync(new Uri(url));
+            }
+        }
+
 
         private async void OnHomeClicked(object sender, EventArgs e)
         {

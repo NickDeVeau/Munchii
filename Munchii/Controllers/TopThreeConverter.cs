@@ -1,18 +1,22 @@
 ﻿using System;
+using Munchii.Models;
 using System.Globalization;
 using Xamarin.Forms;
 
 namespace Munchii
 {
-    public class BoolToColorConverter : IValueConverter
+    public class TopThreeConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool && (bool)value)
+            if (value is Place item && item != null)
             {
-                return Color.FromHex("#D23535"); // Selected (background color)
+                if (item.IsTopThree)
+                    return Color.FromHex("#D23535"); // For top 3
+                else
+                    return Color.Default; // For the rest
             }
-            return Color.White; // Default (background color)
+            return Color.Default; // Default value
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -20,6 +24,7 @@ namespace Munchii
             throw new NotImplementedException();
         }
     }
+
 
 }
 

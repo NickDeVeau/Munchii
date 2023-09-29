@@ -3,59 +3,85 @@
              xmlns:local="clr-namespace:Munchii"
              x:Class="Munchii.DealBreakerPage"
              BackgroundColor="White">
+
     <ContentPage.Resources>
         <ResourceDictionary>
             <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
+            <local:BoolToTextColorConverter x:Key="BoolToTextColorConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="1*"/> <!-- 1/3 for the label -->
-            <RowDefinition Height="Auto"/> <!-- Auto size for the search bar -->
-            <RowDefinition Height="2*"/> <!-- 2/3 for the ListView and the button -->
-        </Grid.RowDefinitions>
+    
+    <ListView x:Name="RestaurantsList" 
+              VerticalOptions="FillAndExpand"
+              BackgroundColor="White"
+              SeparatorVisibility="None"
+              RowHeight="160">
+        <!-- ListView Header -->
+        <ListView.Header>
+            <StackLayout>
+                <!-- "Deal Breakers" Label -->
+                <Label Text="Deal Breakers" 
+                       FontSize="Large" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="CenterAndExpand" 
+                       Margin="100,50,100,20" 
+                       FontFamily="Dm Sans" 
+                       TextColor="Black"/>
 
-        <!-- Label -->
-        <Label Text="Deal Breakers" FontSize="Large" FontAttributes="Bold" HorizontalOptions="CenterAndExpand" Grid.Row="0" Margin="100" FontFamily="Dm Sans" TextColor="Black"/>
+                <!-- Description Label -->
+                <Label Text="Select food-types you absolutely do not want to eat!" 
+                       HorizontalOptions="CenterAndExpand" 
+                       FontSize="Medium" 
+                       FontFamily="Dm Sans"
+                       HorizontalTextAlignment="Center"
+                       TextColor="Black" 
+                       Margin="60,5,60,10"/>
 
-        <!-- Search Bar -->
-        <SearchBar x:Name="SearchBar" Placeholder="Search restaurant types" TextChanged="OnSearchTextChanged" Grid.Row="1" TextColor="Black" BackgroundColor="White"/>
+                <!-- Search Bar -->
+                <SearchBar x:Name="SearchBar" 
+                           Placeholder="Search restaurant types" 
+                           TextChanged="OnSearchTextChanged" 
+                           TextColor="Black"
+                           Margin="30,0,30,0"
+                           BackgroundColor="White"/>
+            </StackLayout>
+        </ListView.Header>
 
-        <!-- ListView -->
-        <ListView x:Name="RestaurantsList" 
-                  ItemSelected="OnItemSelected"
-                  VerticalOptions="FillAndExpand"
-                  BackgroundColor="White"
-                  SeparatorColor="Transparent"
-                  HorizontalOptions="FillAndExpand"
-                  RowHeight="120" 
-                  Grid.Row="2">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <ViewCell>
-                        <Frame CornerRadius="10" 
-                               BackgroundColor="White"
-                               BorderColor="#D23535"
-                               HasShadow="False"
-                               WidthRequest="300"  
-                               HeightRequest="70"  
-                               Padding="25,10" 
-                               Margin="10,15"
-                               HorizontalOptions="CenterAndExpand"
-                               VerticalOptions="CenterAndExpand">
+        <ListView.ItemTemplate>
+            <DataTemplate>
+                <ViewCell>
+                    <local:CustomShadowFrame Padding="5"
+                                             CornerRadius="25" 
+                                             HasShadow="True" 
+                                             Margin="10,10" 
+                                             BackgroundColor="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnFrameTapped"/>
+                        </Frame.GestureRecognizers>
+                        <StackLayout Orientation="Vertical" 
+                                     VerticalOptions="CenterAndExpand">
                             <Label Text="{Binding Name}" 
-                                   TextColor="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}" 
-                                   HorizontalOptions="CenterAndExpand"
-                                   VerticalOptions="CenterAndExpand"/>
-                        </Frame>
-                    </ViewCell>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-            <ListView.Footer>
+                                   HorizontalOptions="CenterAndExpand" 
+                                   FontFamily="DM Sans" 
+                                   TextColor="{Binding IsSelected, Converter={StaticResource BoolToTextColorConverter}}"/>
+                        </StackLayout>
+                    </local:CustomShadowFrame>
+                </ViewCell>
+            </DataTemplate>
+        </ListView.ItemTemplate>
+
+        <!-- ListView Footer -->
+        <ListView.Footer>
+            <StackLayout>
                 <!-- Next Button as Footer -->
-                <Button Grid.Row="1" Text="Continue" Clicked="OnNextClicked" BackgroundColor="Black" TextColor="White"
-                CornerRadius="15" WidthRequest="359" HeightRequest="70" HorizontalOptions="Center" Margin="40,80" FontFamily="DM Sans" FontSize="20"/>
-            </ListView.Footer>
-        </ListView>
-    </Grid>
+               
+
+                <!-- Add extra space for scrolling. Adjust the HeightRequest value as needed. -->
+               
+
+                 <Button Text="Continue" Clicked="OnNextClicked" BackgroundColor="White" TextColor="Black"
+                        CornerRadius="15" WidthRequest="359" HeightRequest="70" HorizontalOptions="Center" Margin="40,40" FontFamily="DM Sans" FontSize="20"/>
+            </StackLayout>
+        </ListView.Footer>
+    </ListView>
 </ContentPage>

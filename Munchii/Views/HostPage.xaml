@@ -14,6 +14,8 @@
                      Clicked="OnLeaveRoomClicked"
                      HorizontalOptions="Start"
                      VerticalOptions="Start"
+                     WidthRequest="100"
+                     HeightRequest="190"
                      BackgroundColor="Transparent"
                      Grid.Row="0"
                      Padding="35,80" />
@@ -105,7 +107,7 @@
                 WidthRequest="359"
                 HeightRequest="70"
                 HorizontalOptions="Center"
-                Margin="20"
+                Margin="20,50"
                 FontFamily="DM Sans"
                 FontSize="20"/>
     </Grid>

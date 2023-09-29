@@ -32,6 +32,21 @@ namespace Munchii
         protected override void OnResume ()
         {
         }
+
+      
+
+
+        public static void CleanupResources()
+        {
+            // Dispose of the current QuizSession, if any
+            ((App)Application.Current).CurrentQuizSession?.Dispose();
+            ((App)Application.Current).CurrentQuizSession = null;
+
+            // Stop the LastSeenUpdater
+            LastSeenUpdater.Instance.Stop();
+
+            // ... any other cleanup
+        }
     }
 }
 

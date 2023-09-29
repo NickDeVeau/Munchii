@@ -3,27 +3,78 @@
              xmlns:local="clr-namespace:Munchii.Controllers"
              x:Class="Munchii.RankRestaurantsPage"
              BackgroundColor="White">
-    <ListView x:Name="RestaurantsList" SeparatorVisibility="None" RowHeight="140" BackgroundColor="White">
+
+    <ListView x:Name="RestaurantsList" 
+              SeparatorVisibility="None"
+              SelectionMode="None"
+              RowHeight="160" 
+              BackgroundColor="White"
+              VerticalOptions="FillAndExpand">
+
+        <!-- ListView Header -->
         <ListView.Header>
-            <StackLayout Spacing="10" Padding="0,100,0,0" > <!-- Moved padding here -->
-                <Label Text="Scale" FontSize="Large" FontAttributes="Bold" HorizontalOptions="CenterAndExpand" TextColor="Black"/>
-                <Label Text="Use the scales to rank each restaurant" HorizontalOptions="CenterAndExpand" TextColor="Black"/>
+            <StackLayout>
+                <!-- Scale label -->
+                <Label Text="Scale" 
+                       FontSize="Large" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="CenterAndExpand" 
+                       TextColor="Black" 
+                       Margin="100,50,100,20"/> <!-- Updated margin here -->
+               
+                <!-- Description label -->
+                <Label Text="Use the scales to rank each restaurant" 
+                       HorizontalOptions="CenterAndExpand" 
+                       TextColor="Black" 
+                       Margin="0,5,0,10"/>
             </StackLayout>
         </ListView.Header>
+
         <ListView.ItemTemplate>
             <DataTemplate>
-                <ViewCell>
-                    <Frame Padding="5" CornerRadius="25" HasShadow="True" Margin="10,5" BackgroundColor="White">
-                        <StackLayout Orientation="Vertical" VerticalOptions="CenterAndExpand">
-                            <Label Text="{Binding Name}" HorizontalOptions="CenterAndExpand" FontFamily="DM Sans" TextColor="Black"/>
-                            <local:CustomSlider x:Name="RankingSlider" Minimum="0" Maximum="5" Value="{Binding Rating}"/>
+                <ViewCell >
+                    <Frame Padding="5" 
+                           CornerRadius="25"
+                           HasShadow="True" 
+                           Margin="10,10" 
+                           BackgroundColor="White">
+                        <StackLayout Orientation="Vertical" 
+                                     VerticalOptions="CenterAndExpand">
+                            <Label Text="{Binding Name}" 
+                                   HorizontalOptions="CenterAndExpand" 
+                                   FontFamily="DM Sans" 
+                                   TextColor="Black"/>
+                            <local:CustomSlider x:Name="RankingSlider" 
+                                                Minimum="0" 
+                                                Maximum="5" 
+                                                Value="{Binding Rating}"/>
                         </StackLayout>
                     </Frame>
                 </ViewCell>
             </DataTemplate>
         </ListView.ItemTemplate>
+
+        <!-- ListView Footer -->
         <ListView.Footer>
-            <Button Text="Submit" Clicked="OnSubmitClicked"/> <!-- Moved the button to the footer -->
+            <StackLayout>
+              
+              
+
+                  <!-- Next Button as Footer -->
+                <Button Text="Continue" 
+                        Clicked="OnSubmitClicked" 
+                        BackgroundColor="White" 
+                        TextColor="Black"
+                        CornerRadius="15" 
+                        WidthRequest="359" 
+                        HeightRequest="70" 
+                        HorizontalOptions="Center" 
+                        Margin="40,40" 
+                        FontFamily="DM Sans" 
+                        FontSize="20"/>
+        
+            </StackLayout>
         </ListView.Footer>
+
     </ListView>
 </ContentPage>

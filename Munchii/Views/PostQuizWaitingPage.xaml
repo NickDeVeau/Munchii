@@ -1,11 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Munchii.PostQuizWaitingPage">
-    <StackLayout VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand">
-        <ActivityIndicator IsRunning="True" />
+             x:Class="Munchii.PostQuizWaitingPage"
+             BackgroundColor="#D23535">
+
+    <Grid VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Label with improved font size, color, spacing, and font family -->
         <Label Text="Waiting for all quizzes to be submitted..." 
                HorizontalOptions="CenterAndExpand" 
-               VerticalOptions="CenterAndExpand" />
-    </StackLayout>
+               TextColor="White"
+               FontSize="20"
+               FontAttributes="Bold"
+               HorizontalTextAlignment="Center"
+               Margin="20,40"
+               FontFamily="DM Sans"
+               Grid.Row="0"/>
+
+        <!-- Activity Indicator with a larger scale for visibility -->
+        <ActivityIndicator IsRunning="True" Color="White" Scale="1.5" Grid.Row="1" />
+    </Grid>
 </ContentPage>
