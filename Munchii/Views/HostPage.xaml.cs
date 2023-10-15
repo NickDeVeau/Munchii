@@ -7,69 +7,63 @@ using Firebase.Database.Query;
 using System.Threading.Tasks;
 using Munchii.Services;
 using Xamarin.Essentials;
+using System;
+using Firebase.Database.Streaming;
 
 namespace Munchii
 {
     public partial class HostPage : ContentPage
     {
         private string roomCode;
-        private string HostUserId;
-
+        private string hostUserId;
         private Func<bool> timerAction;
+        private IDisposable userSubscription;
 
         public HostPage()
         {
             InitializeComponent();
-
-            
-
-
-
             NavigationPage.SetHasNavigationBar(this, false);
             SetupRoom();
-
-            Digit1.Text = roomCode[0].ToString();
-            Digit2.Text = roomCode[1].ToString();
-            Digit3.Text = roomCode[2].ToString();
-            Digit4.Text = roomCode[3].ToString();
+            DisplayRoomCode();
 
             timerAction = TimerTick;
-
             Device.StartTimer(TimeSpan.FromSeconds(1), timerAction);
             ((App)Application.Current).CurrentQuizSession = new QuizSession(roomCode);
-
-        }
-        private bool TimerTick()
-        {
-            Task.Run(() => CheckNullRoom());
-
-            return true;
         }
 
         private async void SetupRoom()
         {
+            GenerateRoomCode();
+            await InitializeFirebaseRoom();
+        }
+
+        private void GenerateRoomCode()
+        {
             var random = new Random();
             roomCode = new string(Enumerable.Range(0, 4).Select(_ => (char)('0' + random.Next(0, 10))).ToArray());
             RoomCodeLabel.Text = $"Room Code: {roomCode}";
+        }
 
-            HostUserId = Guid.NewGuid().ToString();
+        private async Task InitializeFirebaseRoom()
+        {
+            hostUserId = Guid.NewGuid().ToString();
             var hostUser = new User
             {
-                Id = HostUserId,
+                Id = hostUserId,
                 Username = "Host",
                 QuizSubmitted = false
             };
 
             var initialUsers = new Dictionary<string, User>
-    {
-        { HostUserId, hostUser }
-    };
+            {
+                { hostUserId, hostUser }
+            };
 
             var room = new Room
             {
                 RoomCode = roomCode,
                 Users = initialUsers,
-                HostId = HostUserId,
+                HostId = hostUserId,
             };
 
             await App.Database
@@ -77,26 +71,30 @@ namespace Munchii
                 .Child(roomCode)
                 .PutAsync(room);
 
-            // Start the LastSeenUpdater
-            LastSeenUpdater.Instance.Start(roomCode, HostUserId);
-
+            LastSeenUpdater.Instance.Start(roomCode, hostUserId);
             StartUserCountUpdateTimer();
         }
 
-        private IDisposable userSubscription;
-
-        private void OnCopyToClipboardClicked(object sender, EventArgs e)
+        private void DisplayRoomCode()
         {
-            Clipboard.SetTextAsync(roomCode);
+            Digit1.Text = roomCode[0].ToString();
+            Digit2.Text = roomCode[1].ToString();
+            Digit3.Text = roomCode[2].ToString();
+            Digit4.Text = roomCode[3].ToString();
+        }
+
+        private bool TimerTick()
+        {
+            Task.Run(() => CheckNullRoom());
+            return true;
         }
 
         private async Task CheckNullRoom()
         {
-
             var firebaseRooms = await App.Database
-                                        .Child("rooms")
-                                        .Child(roomCode)
-                                        .OnceAsync<Room>();
+                .Child("rooms")
+                .Child(roomCode)
+                .OnceAsync<Room>();
 
             var room = firebaseRooms?.FirstOrDefault();
             if (room == null)
@@ -116,35 +114,50 @@ namespace Munchii
                 .Child(roomCode)
                 .Child("Users")
                 .AsObservable<User>()
-                .Subscribe(firebaseUser =>
+                .Subscribe(firebaseEvent =>
                 {
-                    // Firebase user event types are: Added, Changed, Removed
-                    // If a user is added or changed, update or add them to the list
-                    if (firebaseUser.EventType == Firebase.Database.Streaming.FirebaseEventType.InsertOrUpdate)
-                    {
-                        var existingUser = userList.FirstOrDefault(x => x.Id == firebaseUser.Key);
-                        if (existingUser != null)
-                        {
-                            userList.Remove(existingUser);
-                        }
-                        userList.Add(firebaseUser.Object);
-                    }
-                    // If a user is removed, remove them from the list
-                    else if (firebaseUser.EventType == Firebase.Database.Streaming.FirebaseEventType.Delete)
-                    {
-                        var existingUser = userList.FirstOrDefault(x => x.Id == firebaseUser.Key);
-                        if (existingUser != null)
-                        {
-                            userList.Remove(existingUser);
-                        }
-                    }
-
-                    // Update the user count label with the current user count
-                    Device.BeginInvokeOnMainThread(() =>
-                    {
-                        UserCountLabel.Text = $"{userList.Count} participants";
-                    });
+                    HandleFirebaseUserEvents(firebaseEvent, userList);
                 }, ex => Console.WriteLine($"Subscription Error: {ex.Message}"));
+        }
+
+        private void HandleFirebaseUserEvents(FirebaseEvent<User> firebaseEvent, List<User> userList)
+        {
+            if (firebaseEvent.EventType == Firebase.Database.Streaming.FirebaseEventType.InsertOrUpdate)
+            {
+                UpdateOrAddUserToList(firebaseEvent, userList);
+            }
+            else if (firebaseEvent.EventType == Firebase.Database.Streaming.FirebaseEventType.Delete)
+            {
+                RemoveUserFromList(firebaseEvent, userList);
+            }
+            UpdateUserCountLabel(userList.Count);
+        }
+
+        private void UpdateOrAddUserToList(FirebaseEvent<User> firebaseEvent, List<User> userList)
+        {
+            var existingUser = userList.FirstOrDefault(x => x.Id == firebaseEvent.Key);
+            if (existingUser != null)
+            {
+                userList.Remove(existingUser);
+            }
+            userList.Add(firebaseEvent.Object);
+        }
+
+        private void RemoveUserFromList(FirebaseEvent<User> firebaseEvent, List<User> userList)
+        {
+            var existingUser = userList.FirstOrDefault(x => x.Id == firebaseEvent.Key);
+            if (existingUser != null)
+            {
+                userList.Remove(existingUser);
+            }
+        }
+
+        private void UpdateUserCountLabel(int count)
+        {
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                UserCountLabel.Text = $"{count} participants";
+            });
         }
 
         private async void OnStartQuizClicked(object sender, EventArgs e)
@@ -154,14 +167,12 @@ namespace Munchii
                 .Child(roomCode)
                 .Child("QuizStarted")
                 .PutAsync(true);
-            await Navigation.PushAsync(new DealBreakerPage(roomCode, HostUserId));
+            await Navigation.PushAsync(new DealBreakerPage(roomCode, hostUserId));
         }
 
         private async void OnLeaveRoomClicked(object sender, EventArgs e)
         {
-            await RemoveUser(HostUserId);
-            // NOTE: If the host is the last user in the room, and no new user is added within the next 2 minutes,
-            // the room will be considered stale and deleted by the Firebase function.
+            await RemoveUser(hostUserId);
             await Navigation.PopAsync();
         }
 
@@ -175,6 +186,9 @@ namespace Munchii
                 .DeleteAsync();
         }
 
-       
+        private void OnCopyToClipboardClicked(object sender, EventArgs e)
+        {
+            Clipboard.SetTextAsync(roomCode);
+        }
     }
 }

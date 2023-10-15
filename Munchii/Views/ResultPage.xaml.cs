@@ -1,65 +1,123 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Xamarin.Forms;
-using Firebase.Database;
-using Munchii.Models;
-using Firebase.Database.Query;
-using Xamarin.Forms.Maps;
-using Newtonsoft.Json;
-using System.Net.Http;
 using System.Threading.Tasks;
+using System.ComponentModel;
+using Xamarin.Forms;
+using Xamarin.Forms.Maps;
+using Xamarin.Essentials;
+using Firebase.Database;
+using Firebase.Database.Query;
 using Newtonsoft.Json;
 using System.Net.Http;
-using Xamarin.Essentials;
-using System.ComponentModel;
+using Munchii.Models;
 
 namespace Munchii
 {
     public partial class ResultPage : ContentPage, INotifyPropertyChanged
     {
-
+        // Fields
         private readonly string roomCode;
         private readonly FirebaseClient firebase;
-        int miles = 1;
-
-
+        private int miles = 1;
         private string _winningRestaurantType;
+
+        // Properties
         public string WinningRestaurantType
         {
-            get { return _winningRestaurantType; }
+            get => _winningRestaurantType;
             set
             {
                 if (_winningRestaurantType != value)
                 {
-
                     _winningRestaurantType = value;
                     OnPropertyChanged(nameof(WinningRestaurantType));
                 }
             }
         }
 
+        // Events
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            var changed = PropertyChanged;
-            if (changed != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
+        // Constructor
         public ResultPage(string roomCode)
         {
             InitializeComponent();
             BindingContext = this;
             NavigationPage.SetHasNavigationBar(this, false);
             this.roomCode = roomCode;
-
             this.firebase = new FirebaseClient("https://munchii-8986a-default-rtdb.firebaseio.com");
-
             LoadResults();
+        }
+
+        // Methods
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private async void LoadResults()
+        {
+            // Fetch user data from Firebase
+            var usersSnapshot = await firebase
+                .Child("rooms")
+                .Child(roomCode)
+                .Child("Users")
+                .OnceAsync<User>();
+
+            // Initialize restaurant rankings and deal breakers
+            var restaurantRankings = new Dictionary<string, double>();
+            var dealBreakers = new HashSet<string>();
+
+            // Populate deal breakers
+            foreach (var userSnapshot in usersSnapshot)
+            {
+                var userDealBreakers = userSnapshot.Object.QuizData?.DealBreakers;
+                if (userDealBreakers == null) continue;
+
+                foreach (var dealBreaker in userDealBreakers)
+                {
+                    if (dealBreaker.IsSelected)
+                    {
+                        dealBreakers.Add(dealBreaker.Name);
+                    }
+                }
+            }
+
+            // Populate restaurant rankings
+            foreach (var userSnapshot in usersSnapshot)
+            {
+                var rankings = userSnapshot.Object.QuizData?.Rankings;
+                if (rankings == null) continue;
+
+                foreach (var ranking in rankings)
+                {
+                    if (!dealBreakers.Contains(ranking.Name))
+                    {
+                        if (restaurantRankings.ContainsKey(ranking.Name))
+                        {
+                            restaurantRankings[ranking.Name] += ranking.Rating;
+                        }
+                        else
+                        {
+                            restaurantRankings[ranking.Name] = ranking.Rating;
+                        }
+                    }
+                }
+            }
+
+            // Determine the winning restaurant type
+            var winningRestaurant = restaurantRankings.OrderByDescending(r => r.Value).FirstOrDefault();
+            if (winningRestaurant.Key == null) return;
+
+            WinningRestaurantType = winningRestaurant.Key;
+
+            // Fetch and display nearby restaurants
+            float milesToMeters = miles * 1609;
+            string radius = milesToMeters.ToString();
+            var allNearbyRestaurants = await FetchNearbyRestaurants(winningRestaurant.Key, radius);
+            var topThree = FetchTopThreeFromList(allNearbyRestaurants);
+            RestaurantList.ItemsSource = topThree.Concat(allNearbyRestaurants.Except(topThree));
         }
 
         private List<Place> FetchTopThreeFromList(List<Place> allRestaurants)
@@ -91,28 +149,6 @@ namespace Munchii
             return topThree;
         }
 
-
-        private async Task<List<Place>> FetchTopThreeRestaurants(string restaurantType, string radius)
-        {
-            var allRestaurants = await FetchNearbyRestaurants(restaurantType, radius);
-            if (allRestaurants == null || allRestaurants.Count == 0)
-                return new List<Place>();
-
-            var topThree = new List<Place>();
-            var cheapRestaurant = allRestaurants.FirstOrDefault(r => r.PriceLevel == 1);
-            var mediumRestaurant = allRestaurants.FirstOrDefault(r => r.PriceLevel == 2);
-            var expensiveRestaurant = allRestaurants.FirstOrDefault(r => r.PriceLevel == 3);
-
-            if (cheapRestaurant != null)
-                topThree.Add(cheapRestaurant);
-            if (mediumRestaurant != null)
-                topThree.Add(mediumRestaurant);
-            if (expensiveRestaurant != null)
-                topThree.Add(expensiveRestaurant);
-
-            return topThree;
-        }
-
         private async Task<List<Place>> FetchNearbyRestaurants(string restaurantType, string radius)
         {
             string apiKey = "AIzaSyC7PV_5w9rS6LX3wNetqR-CSrmxrR1zxg8";
@@ -138,88 +174,6 @@ namespace Munchii
             }
         }
 
-        private async void LoadResults()
-        {
-            BindingContext = this;
-            var usersSnapshot = await firebase
-                .Child("rooms")
-                .Child(roomCode)
-                .Child("Users")
-                .OnceAsync<User>();
-
-            Dictionary<string, double> restaurantRankings = new Dictionary<string, double>();
-            HashSet<string> dealBreakers = new HashSet<string>();
-
-            foreach (var userSnapshot in usersSnapshot)
-            {
-                var rankings = userSnapshot.Object.QuizData?.Rankings;
-                var userDealBreakers = userSnapshot.Object.QuizData?.DealBreakers;
-
-                if (userDealBreakers != null)
-                {
-                    foreach (var dealBreaker in userDealBreakers)
-                    {
-                        if (dealBreaker.IsSelected)
-                        {
-                            dealBreakers.Add(dealBreaker.Name);
-                        }
-                    }
-                }
-            }
-
-            foreach (var userSnapshot in usersSnapshot)
-            {
-                var rankings = userSnapshot.Object.QuizData?.Rankings;
-                if (rankings != null)
-                {
-                    foreach (var ranking in rankings)
-                    {
-                        if (!dealBreakers.Contains(ranking.Name))
-                        {
-                            if (restaurantRankings.ContainsKey(ranking.Name))
-                            {
-                                restaurantRankings[ranking.Name] += ranking.Rating;
-                            }
-                            else
-                            {
-                                restaurantRankings[ranking.Name] = ranking.Rating;
-                            }
-                        }
-                    }
-                }
-            }
-            var winningRestaurant = restaurantRankings.OrderByDescending(r => r.Value).FirstOrDefault();
-
-            if (winningRestaurant.Key != null)
-            {
-                WinningRestaurantType = winningRestaurant.Key;  // Update the property
-
-                float milesToMeters = miles * 1609;
-                string radius = milesToMeters.ToString();
-
-                var allNearbyRestaurants = await FetchNearbyRestaurants(winningRestaurant.Key, radius);
-                var topThree = FetchTopThreeFromList(allNearbyRestaurants);  // Extracting top three
-
-                foreach (var restaurant in allNearbyRestaurants)
-                {
-                    restaurant.Name = restaurant.Name.ToUpper();
-                }
-
-                RestaurantList.ItemsSource = topThree.Concat(allNearbyRestaurants.Except(topThree));  // Display top three followed by the rest
-            }
-        }
-
-        private void OnRadiusButtonClicked(object sender, EventArgs e)
-        {
-            miles = miles*2;
-            if (miles > 25)
-            {
-                miles = 1;
-            }
-            RadiusButton.Text = $"Matches within {miles} miles";
-            LoadResults();
-        }
-
         public async Task<Location> GetCurrentLocationAsync()
         {
             try
@@ -243,47 +197,48 @@ namespace Munchii
             }
         }
 
-        private void AddPinToMap(string label, string address, Position position)
+        // Event Handlers
+        private void OnRadiusButtonClicked(object sender, EventArgs e)
         {
-            var pin = new Pin
+            miles = miles * 2;
+            if (miles > 25)
             {
-                Type = PinType.Place,
-                Position = position,
-                Label = label,
-                Address = address
-            };
+                miles = 1;
+            }
+            RadiusButton.Text = $"Matches within {miles} miles";
+            LoadResults();
         }
 
-        private async void OnDescriptionTapped(object sender, EventArgs e)
+        private async void OnRestaurantItemTapped(object sender, ItemTappedEventArgs e)
         {
-            if (sender is Label label && label.BindingContext is Place place)
+            if (e.Item is Place place)
             {
-                // Define the destination
-                var destination = place.Address;
+                // Define the destination name (e.g., the restaurant's name)
+                var destinationName = place.Name;
 
                 // Check which platform we're on
                 var isiOS = Device.RuntimePlatform == Device.iOS;
-
-                // iOS doesn't like spaces in its URLs
-                destination = isiOS ? Uri.EscapeUriString(destination) : destination;
 
                 string url;
 
                 if (isiOS)
                 {
-                    // Open in Apple Maps
-                    url = $"http://maps.apple.com/maps?q={destination}";
+                    // Open in Apple Maps with the name of the restaurant for more details using the maps:// scheme
+                    url = $"maps://?q={Uri.EscapeUriString(destinationName)}";
                 }
                 else
                 {
-                    // Open in Google Maps
-                    url = $"https://www.google.com/maps/dir/?api=1&destination={destination}";
+                    // If needed, you can have a fallback for non-iOS devices.
+                    // The following example uses Google Maps:
+                    url = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeUriString(destinationName)}";
                 }
 
                 await Launcher.OpenAsync(new Uri(url));
             }
-        }
 
+            // Deselect the tapped item
+            RestaurantList.SelectedItem = null;
+        }
 
         private async void OnHomeClicked(object sender, EventArgs e)
         {

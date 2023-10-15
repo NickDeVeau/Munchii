@@ -55,11 +55,6 @@ namespace Munchii
             });
         }
 
-
-
-
-
-
         protected override void OnDetachingFrom(Entry entry)
         {
             entry.TextChanged -= OnEntryTextChanged;

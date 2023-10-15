@@ -19,49 +19,77 @@ namespace Munchii
         {
             base.OnAppearing();
 
-            App.CleanupResources();
+            try
+            {
+                App.CleanupResources();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during cleanup: {ex.Message}");
+            }
         }
 
         private async void OnHostClicked(object sender, EventArgs e)
         {
-            if (IsConnectionAvailable())
+            try
             {
-                await Navigation.PushAsync(new HostPage());
+                if (IsConnectionAvailable())
+                {
+                    await Navigation.PushAsync(new HostPage());
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Poor or no Wi-Fi connection detected. Please check your connection.", "OK");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await DisplayAlert("Error", "Poor or no Wi-Fi connection detected. Please check your connection.", "OK");
+                await DisplayAlert("Error", "An error occurred while attempting to host a room. Please try again.", "OK");
+                System.Diagnostics.Debug.WriteLine($"Error while hosting: {ex.Message}");
             }
         }
 
         private async void OnJoinClicked(object sender, EventArgs e)
         {
-            if (IsConnectionAvailable())
+            try
             {
-                await Navigation.PushAsync(new JoinPage());
+                if (IsConnectionAvailable())
+                {
+                    await Navigation.PushAsync(new JoinPage());
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Poor or no Wi-Fi connection detected. Please check your connection.", "OK");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await DisplayAlert("Error", "Poor or no Wi-Fi connection detected. Please check your connection.", "OK");
+                await DisplayAlert("Error", "An error occurred while attempting to join a room. Please try again.", "OK");
+                System.Diagnostics.Debug.WriteLine($"Error while joining: {ex.Message}");
             }
         }
 
-        // Checks if there is an active Wi-Fi connection
         private bool IsConnectionAvailable()
         {
-            var current = Connectivity.NetworkAccess;
-            if (current == NetworkAccess.Internet)
+            try
             {
-                // Further check if connection is Wi-Fi (this step is optional)
-                var profiles = Connectivity.ConnectionProfiles;
-                if (profiles.Contains(ConnectionProfile.WiFi))
+                var current = Connectivity.NetworkAccess;
+
+                if (current == NetworkAccess.Internet)
                 {
-                    return true;
+                    var profiles = Connectivity.ConnectionProfiles;
+                    if (profiles.Contains(ConnectionProfile.WiFi) || profiles.Contains(ConnectionProfile.Cellular))
+                    {
+                        return true;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error checking network access: {ex.Message}");
             }
 
             return false;
         }
-
     }
 }

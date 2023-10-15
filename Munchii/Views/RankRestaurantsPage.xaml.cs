@@ -14,7 +14,7 @@ namespace Munchii
     {
         private string roomCode;
         private string userId;
-        private List<RestaurantType> dealBreakers; // Declare dealBreakers at the class level
+        private List<RestaurantType> dealBreakers;
         private FirebaseClient firebase;
         public ObservableCollection<Restaurant> Restaurants { get; set; }
 
@@ -24,49 +24,39 @@ namespace Munchii
             NavigationPage.SetHasNavigationBar(this, false);
             this.roomCode = roomCode;
             this.userId = userId;
-            this.dealBreakers = dealBreakers; // Assign dealBreakers here
+            this.dealBreakers = dealBreakers;
             this.firebase = new FirebaseClient("https://munchii-8986a-default-rtdb.firebaseio.com");
 
-            // Initialize the Restaurants list with all available restaurants
             Restaurants = new ObservableCollection<Restaurant>(allRestaurants.Select(r => new Restaurant { Name = r.Name, Rating = 0 }));
-
-            // Remove the deal breakers
             foreach (var dealBreaker in dealBreakers)
             {
                 Restaurants.Remove(Restaurants.FirstOrDefault(r => r.Name == dealBreaker.Name));
             }
-
             RestaurantsList.ItemsSource = Restaurants;
         }
 
-
         private async void OnSubmitClicked(object sender, EventArgs e)
         {
-            // Now you can use dealBreakers here
-            var quizData = new
+            try
             {
-                Rankings = Restaurants,
-                DealBreakers = dealBreakers // This will now be in scope
-            };
-
-            // Save the quiz data to Firebase
-            await SubmitQuizData();
-
-            // Mark the quiz as submitted.
-            MarkQuizAsSubmitted();
-
-            // Navigate to the PostQuizWaitingPage.
-            await Navigation.PushAsync(new PostQuizWaitingPage(roomCode, userId));
+                await SubmitQuizData();
+                await MarkQuizAsSubmitted();
+                await Navigation.PushAsync(new PostQuizWaitingPage(roomCode, userId));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in OnSubmitClicked: {ex.Message}");
+                await DisplayAlert("Error", "There was an error submitting the quiz. Please try again.", "OK");
+            }
         }
 
         private async Task SubmitQuizData()
         {
             var quizData = new
             {
-                Rankings = Restaurants, // assuming Restaurants contains the ranking data
-                DealBreakers = dealBreakers // Add your dealbreakers here
+                Rankings = Restaurants,
+                DealBreakers = dealBreakers
             };
-
             await firebase
                 .Child("rooms")
                 .Child(roomCode)
@@ -75,7 +65,6 @@ namespace Munchii
                 .Child("QuizData")
                 .PutAsync(quizData);
         }
-
 
         private async Task MarkQuizAsSubmitted()
         {

@@ -11,11 +11,14 @@
     </Grid.RowDefinitions>
 
     <ImageButton Source="Arrow.png"
-                 Clicked="OnBackClicked"
-                 HorizontalOptions="Start"
-                 VerticalOptions="Start"
-                 BackgroundColor="Transparent"
-                 Padding="35,80" />
+                     Clicked="OnLeaveRoomClicked"
+                     HorizontalOptions="Start"
+                     VerticalOptions="Start"
+                     WidthRequest="100"
+                     HeightRequest="190"
+                     BackgroundColor="Transparent"
+                     Grid.Row="0"
+                     Padding="35,80" />
 
     <StackLayout Grid.Row="0" VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand">
         <Label Text="Enter Your Party's Code"

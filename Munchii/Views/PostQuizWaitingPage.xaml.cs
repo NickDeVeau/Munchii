@@ -20,7 +20,14 @@ namespace Munchii
             this.roomCode = roomCode;
             this.clientUserId = clientUserId;
 
-            ListenForAllQuizzesSubmitted();
+            try
+            {
+                ListenForAllQuizzesSubmitted();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error setting up listener: {ex.Message}");
+            }
         }
 
         private bool navigationInProgress = false;
@@ -33,13 +40,19 @@ namespace Munchii
                 return;
 
             hasNavigated = true;
-            Navigation.PushAsync(new ResultPage(roomCode)); // Add roomCode here
+            try
+            {
+                Navigation.PushAsync(new ResultPage(roomCode)); // Add roomCode here
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error navigating to ResultPage: {ex.Message}");
+            }
         }
-
 
         private void ListenForAllQuizzesSubmitted()
         {
-            App.Database
+            userSubscription = App.Database
                 .Child("rooms")
                 .Child(roomCode)
                 .Child("Users")
@@ -48,32 +61,43 @@ namespace Munchii
                 {
                     Device.BeginInvokeOnMainThread(async () =>
                     {
-                        var usersSnapshot = await App.Database
-                            .Child("rooms")
-                            .Child(roomCode)
-                            .Child("Users")
-                            .OnceAsync<User>();
-
-                        bool allUsersSubmitted = true;
-
-                        foreach (var userSnapshot in usersSnapshot)
+                        try
                         {
-                            if (!userSnapshot.Object.QuizSubmitted)
+                            var usersSnapshot = await App.Database
+                                .Child("rooms")
+                                .Child(roomCode)
+                                .Child("Users")
+                                .OnceAsync<User>();
+
+                            bool allUsersSubmitted = true;
+
+                            foreach (var userSnapshot in usersSnapshot)
                             {
-                                allUsersSubmitted = false;
-                                break;
+                                if (!userSnapshot.Object.QuizSubmitted)
+                                {
+                                    allUsersSubmitted = false;
+                                    break;
+                                }
+                            }
+
+                            if (allUsersSubmitted)
+                            {
+                                NavigateToResultPage();
                             }
                         }
-
-                        if (allUsersSubmitted)
+                        catch (Exception ex)
                         {
-                            NavigateToResultPage();
+                            System.Diagnostics.Debug.WriteLine($"Error in ListenForAllQuizzesSubmitted: {ex.Message}");
                         }
                     });
                 });
         }
 
-
-
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            // Unsubscribe from the observable when the page disappears
+            userSubscription?.Dispose();
+        }
     }
 }

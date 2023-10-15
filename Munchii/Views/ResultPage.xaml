@@ -13,7 +13,7 @@
 </ContentPage.Resources>
 
     <ContentPage.Content>
-        <ListView x:Name="RestaurantList" SeparatorVisibility="None" RowHeight="160" BackgroundColor="White" SelectionMode="None">
+        <ListView x:Name="RestaurantList" SeparatorVisibility="None" RowHeight="160" BackgroundColor="White" SelectionMode="None" ItemTapped="OnRestaurantItemTapped">
             <ListView.Header>
     <StackLayout Spacing="10">
         <!-- Arrow button at the top -->
@@ -106,9 +106,7 @@
                                                TextColor="Gray" 
                                                FontSize="Small"
                                                FontFamily="DM Sans">
-                                            <Label.GestureRecognizers>
-                                                <TapGestureRecognizer Tapped="OnDescriptionTapped"/>
-                                            </Label.GestureRecognizers>
+                                           
                                         </Label>
                                     </StackLayout>
                                     <Image Source="{Binding ImageUrl}" WidthRequest="80" HeightRequest="80" Aspect="AspectFill" HorizontalOptions="End"/>
