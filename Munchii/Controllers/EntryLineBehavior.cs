@@ -2,52 +2,43 @@
 
 namespace Munchii
 {
+    // EntryLineBehavior class handles text entry behavior for Entry elements.
     public class EntryLineBehavior : Behavior<Entry>
     {
-        public static readonly BindableProperty NextEntryProperty =
-            BindableProperty.Create(nameof(NextEntry), typeof(Entry), typeof(EntryLineBehavior), null);
+        // Bindable properties for the next and previous Entry elements.
+        public static readonly BindableProperty NextEntryProperty = BindableProperty.Create(nameof(NextEntry), typeof(Entry), typeof(EntryLineBehavior), null);
+        public static readonly BindableProperty PreviousEntryProperty = BindableProperty.Create(nameof(PreviousEntry), typeof(Entry), typeof(EntryLineBehavior), null);
 
-        public static readonly BindableProperty PreviousEntryProperty =
-            BindableProperty.Create(nameof(PreviousEntry), typeof(Entry), typeof(EntryLineBehavior), null);
+        // Properties for the next and previous Entry elements.
+        public Entry NextEntry { get => (Entry)GetValue(NextEntryProperty); set => SetValue(NextEntryProperty, value); }
+        public Entry PreviousEntry { get => (Entry)GetValue(PreviousEntryProperty); set => SetValue(PreviousEntryProperty, value); }
 
-        public Entry NextEntry
-        {
-            get { return (Entry)GetValue(NextEntryProperty); }
-            set { SetValue(NextEntryProperty, value); }
-        }
-
-        public Entry PreviousEntry
-        {
-            get { return (Entry)GetValue(PreviousEntryProperty); }
-            set { SetValue(PreviousEntryProperty, value); }
-        }
-
+        // Attach behavior to Entry element.
         protected override void OnAttachedTo(Entry entry)
         {
             entry.TextChanged += OnEntryTextChanged;
             base.OnAttachedTo(entry);
         }
 
+        // Handle text changes in the Entry element.
         private void OnEntryTextChanged(object sender, TextChangedEventArgs e)
         {
             Entry entry = (Entry)sender;
 
-            // Check if the new text is a digit
+            // Validate input to only allow digits.
             if (!string.IsNullOrEmpty(e.NewTextValue) && !char.IsDigit(e.NewTextValue[0]))
             {
-                // If not a digit, revert to the old value
                 entry.Text = e.OldTextValue;
                 return;
             }
 
+            // Handle focus change based on text length.
             Device.BeginInvokeOnMainThread(() =>
             {
-                // If a character was added, and the entry is at max length, move to the next entry.
                 if (!string.IsNullOrEmpty(e.NewTextValue) && e.NewTextValue.Length == entry.MaxLength)
                 {
                     NextEntry?.Focus();
                 }
-                // If a character was deleted, move to the previous entry (if the current entry has one character left).
                 else if (e.NewTextValue?.Length < e.OldTextValue?.Length)
                 {
                     PreviousEntry?.Focus();
@@ -55,6 +46,7 @@ namespace Munchii
             });
         }
 
+        // Detach behavior from Entry element.
         protected override void OnDetachingFrom(Entry entry)
         {
             entry.TextChanged -= OnEntryTextChanged;

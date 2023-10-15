@@ -1,12 +1,10 @@
-﻿using System;
-using Xamarin.Forms;
-using Munchii;
+﻿using Xamarin.Forms;
 
 namespace Munchii.Controllers
 {
+    // CustomSlider class extends the Slider class for custom functionality.
     public class CustomSlider : Slider
     {
-        // You can add properties and methods here for custom functionality
+        // Currently empty, add custom slider properties and methods here.
     }
 }
-
