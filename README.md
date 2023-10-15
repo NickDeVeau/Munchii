@@ -45,9 +45,6 @@ Follow the installation steps and run the application on your emulator or physic
 #### `App.xaml.cs`
 - The main application file that initializes Xamarin Forms.
 
-#### `Controllers/LastSeenUpdater.cs`
-- A controller for updating the last seen status of a user.
-
 #### `Models/Place.cs`
 - A model representing a place or restaurant.
 
